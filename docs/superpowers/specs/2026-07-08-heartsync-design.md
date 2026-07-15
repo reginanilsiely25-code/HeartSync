@@ -22,11 +22,17 @@ The project is valuable as a software engineering project because it combines na
 
 ## 2. Product Positioning
 
-HeartSync is an iOS native couple app with a companion Web experience.
+HeartSync is an iOS native couple app with a companion Web experience. The product vision is to make both iOS and Web feel polished, interactive, and emotionally coherent.
 
 The iOS app is the primary product. It emphasizes native interaction, SwiftUI, Keychain, and MapKit route snapshots.
 
-The Web app is not merely an admin console. It is a warm desktop experience that lets reviewers and users operate the same core workflows without running an iOS simulator. It supports the same main modules: Today, Promises, Review, and Us.
+The Web app is not merely an admin console. It is a warm desktop review experience that lets reviewers operate a bounded version of the core workflow without running an iOS simulator. It uses the same module language as iOS, but it is not an iOS-equivalent second client.
+
+Delivery is staged to control scope:
+
+- Core MVP: backend, database, Web review flow, shared sync cards, daily sync, promise planning, review metrics, local template reports, tests, CI, Docker, and README.
+- iOS Excellence Track: full SwiftUI product polish remains the goal, but the minimum iOS acceptance slice is Today, Promises route cover, Review rendering, Us settings, Keychain storage, and MapKit route snapshot integration.
+- AI/Polish Track: real LLM provider calls, advanced safety filtering, animation polish, and richer monthly analysis are enhancements that must not block the Core MVP.
 
 The product language should stay gentle. Analytics are framed as "relationship temperature" or "closeness rhythm", not as relationship health diagnosis.
 
@@ -57,7 +63,7 @@ The primary tabs are:
 
 8. As a user, I want to see weekly and monthly trends in sync rate, mood, energy, longing, and promise completion so that we can reflect on relationship rhythm.
 
-9. As a user with an LLM key, I want HeartSync to generate a gentle trend explanation and a private message draft so that I can better express myself.
+9. As a user, I want HeartSync to generate a gentle template or mock-AI trend explanation and private message draft so that I can better express myself even without a real LLM key.
 
 10. As a reviewer, I want to open a Web version, switch between the two demo users, perform core workflows, and reset demo data so that I can verify the project quickly.
 
@@ -154,7 +160,7 @@ Input:
 - optional adjusted longing score;
 - tags;
 - note;
-- visibility;
+- visibility: `partner_visible` or `private`;
 - sync date.
 
 Behavior:
@@ -165,6 +171,16 @@ Behavior:
 - The Today page shows both partners' daily state.
 - Historical data powers trends and reports.
 
+Visibility behavior:
+
+- `partner_visible` is the default.
+- For `partner_visible` syncs, the partner can see the selected card, tags, scores, and note on Today surfaces.
+- For `partner_visible` syncs, note text can be included in shared template/mock LLM inputs if it is selected by the note-selection rule.
+- For `private` syncs, the partner only sees that the user has synced today; card, tags, scores, and note are hidden from the partner's Today surface.
+- For `private` syncs, the record counts toward sync rate and anonymous aggregate metrics such as average mood, energy, and longing.
+- For `private` syncs, note text is excluded from shared report text and shared LLM inputs.
+- For `private` syncs, note text may be used only for the current user's private message draft.
+
 Output:
 
 - today's sync status for both members;
@@ -173,6 +189,7 @@ Output:
 Error handling:
 
 - invalid score outside 1-5 is rejected;
+- invalid visibility values are rejected;
 - missing card is rejected unless the API explicitly supports a manual sync fallback;
 - duplicate same-day submission updates the existing record.
 
@@ -187,15 +204,19 @@ Input:
 - owner;
 - manual start place;
 - destination;
-- start latitude/longitude;
-- destination latitude/longitude;
+- optional start latitude/longitude;
+- optional destination latitude/longitude;
 - notes.
 
 Behavior:
 
 - The Promises tab is calendar-first.
 - Users can create, edit, complete, and postpone promises.
-- iOS generates a MapKit route snapshot from start to destination.
+- Core MVP obtains coordinates only from manual input or demo seed locations.
+- Backend stores submitted place text and coordinates; it does not perform geocoding.
+- Web can display and edit place text and coordinate fields but does not search maps.
+- iOS Excellence Track may use MapKit search or place selection to fill coordinates before submitting the plan.
+- iOS generates a MapKit route snapshot from start to destination when both endpoints have coordinates.
 - The backend stores structured place data, not the image.
 - Tapping a route card opens Apple Maps.
 
@@ -211,6 +232,8 @@ Boundary conditions:
 - No route tracking.
 - No navigation state storage.
 - Start place is manually entered.
+- Backend does not call third-party geocoding APIs.
+- Plans without complete coordinates remain valid but show a non-map fallback cover.
 
 ### 5.6 Review Metrics
 
@@ -253,22 +276,34 @@ Boundary conditions:
 
 Input:
 
-- OpenAI-compatible base URL;
-- model;
-- API key from iOS Keychain;
 - structured metrics summary;
 - high-frequency cards and tags;
 - promise completion/postponement summary;
-- selected non-private notes.
+- selected `partner_visible` notes;
+- current user's own `private` notes only when generating that user's private message draft;
+- optional provider config for AI Excellence Track: OpenAI-compatible base URL, model, and API key from iOS Keychain.
 
 Behavior:
 
-- iOS stores the key in Keychain.
-- iOS sends the key to the backend only for the current LLM request.
-- Backend does not persist or log the key.
-- Backend calls an OpenAI-compatible chat completions endpoint.
-- Backend requires structured JSON output.
-- If LLM is unavailable, malformed, or unsafe, the backend falls back to local templates.
+- Core MVP generates the same analysis shape with local templates and a mock LLM provider.
+- Backend defines an LLM client interface so template/mock and real providers share one contract.
+- Backend requires structured JSON-like output from the mock and real providers.
+- AI Excellence Track adds real OpenAI-compatible provider calls.
+- In AI Excellence Track, iOS stores the key in Keychain and sends it to the backend only for the current request.
+- Backend never persists or logs the key.
+- If real LLM output is unavailable, malformed, or unsafe, the backend falls back to local templates.
+
+Note selection rule:
+
+- Shared analysis uses only `partner_visible` notes from the current report period.
+- Shared analysis includes at most 3 notes.
+- If the user explicitly selects notes for a report, use selected `partner_visible` notes in the user's selected order.
+- If the user does not select notes, use the latest 3 `partner_visible` notes in the period, sorted by sync date descending.
+- If fewer than 3 eligible notes exist, use all eligible notes.
+- If no eligible notes exist, pass an empty note array.
+- Each selected note is truncated to 120 characters before template, mock, or real provider input.
+- `private` notes never enter shared summary, trend explanation, or shared suggestions.
+- The current user's `private` notes may be used only for `privateMessageDraft`, with at most the latest 1 private note in the period, truncated to 120 characters.
 
 Expected JSON shape:
 
@@ -313,17 +348,23 @@ Behavior:
 
 - Web is a warm desktop app, not an admin console.
 - Users can switch between two demo users.
-- Users can manage sync cards, submit daily syncs, manage promises, and view reviews.
+- Users can manage sync cards, submit and update daily syncs, create/complete/postpone promises, and view generated reviews.
+- Web shows route text, start/destination coordinates when available, and Apple Maps links for promise routes.
+- Web renders a right-side impact panel showing how the current action affects sync rate, promise stats, or review readiness.
 - Web can reset demo data.
-- Web can show LLM status and local template fallback.
+- Web can show LLM status and local template or mock LLM fallback.
 
 Output:
 
-- complete reviewable product flow from a browser.
+- bounded reviewable product flow from a browser.
 
 Boundary conditions:
 
 - Web does not generate native MapKit snapshots.
+- Web does not use iOS Keychain.
+- Web does not accept or store real LLM API keys in MVP.
+- Web does not implement a mobile responsive app equivalent to iOS.
+- Web does not duplicate core analytics logic; it calls backend APIs for calculations.
 - Web can display route information and map links.
 - iOS remains the primary native experience.
 
@@ -332,9 +373,10 @@ Boundary conditions:
 ### 6.1 Security
 
 - Real API keys must never be committed.
-- LLM API key is stored in iOS Keychain.
-- Backend only receives the key for a single analysis request.
-- Backend must redact Authorization headers from logs.
+- Core MVP uses template and mock LLM analysis, not real API keys.
+- AI Excellence Track stores the LLM API key in iOS Keychain.
+- AI Excellence Track allows the backend to receive the key only for a single analysis request.
+- Backend must redact Authorization headers from logs even when using mock clients.
 - Web demo must not expose real secrets.
 - `.env` files, local databases, generated build outputs, and temporary mockups must not be committed.
 
@@ -471,6 +513,8 @@ Constraints:
 
 - unique `(userId, syncDate)`.
 - scores must be 1-5.
+- `visibility` must be one of `partner_visible` or `private`.
+- `private` records are included in aggregate metrics but their note text must not appear in shared reports or partner-visible Today responses.
 
 ### Plan
 
@@ -495,6 +539,9 @@ Constraints:
 
 - `type` is one of date, anniversary, joint task.
 - `status` is one of not started, in progress, completed, postponed.
+- latitude and longitude fields are nullable.
+- a route-enabled plan must include all four coordinate values: start latitude, start longitude, destination latitude, and destination longitude.
+- plans without complete coordinates must render a fallback cover and must not attempt route snapshot generation.
 
 ### InsightReport
 
@@ -569,7 +616,7 @@ Endpoints:
 
 ### iOS
 
-SwiftUI is selected for native iOS UI and because the project explicitly targets an iOS-first app. MapKit provides native route snapshots and Apple Maps integration. Keychain stores the user-provided LLM API key.
+SwiftUI is selected for native iOS UI and because the project explicitly targets an iOS-first app. MapKit provides native route snapshots and Apple Maps integration. In the iOS Excellence Track, Keychain stores the user-provided LLM API key for real provider calls.
 
 ### Backend
 
@@ -597,16 +644,17 @@ The Web experience uses the same HeartSync tokens and component vocabulary rathe
 
 ### LLM
 
-OpenAI-compatible chat completions are selected through user-configurable `baseURL`, `model`, and `apiKey`. This supports OpenAI, DeepSeek, Tongyi-compatible gateways, or other compatible providers.
+Core MVP uses local templates and a mock LLM provider behind the same structured analysis interface. AI Excellence Track adds OpenAI-compatible chat completions through user-configurable `baseURL`, `model`, and `apiKey`. This supports OpenAI, DeepSeek, Tongyi-compatible gateways, or other compatible providers without making real provider access a Core MVP dependency.
 
 ## 11. Credential and Distribution Design
 
 Credential design:
 
-- iOS stores API key in Keychain.
-- iOS settings page allows create/update/clear.
+- Core MVP does not require a real LLM key.
+- AI Excellence Track stores API key in iOS Keychain.
+- AI Excellence Track iOS settings page allows create/update/clear.
 - UI only shows configured/unconfigured, never raw key.
-- Backend accepts the key only for the current request.
+- Backend accepts the key only for the current request when real provider mode is enabled.
 - Backend does not log or persist the key.
 - Tests use fake keys and mock LLM clients.
 
@@ -629,7 +677,8 @@ Unit tests:
 - promise completion stats;
 - card score validation;
 - local report template generation;
-- LLM JSON parsing and fallback.
+- deterministic note selection for analysis: selected notes preferred over automatic latest notes, max 3 shared notes, private notes excluded from shared inputs, and latest 1 private note allowed only for private message draft;
+- mock LLM JSON parsing and fallback.
 
 API tests:
 
@@ -640,7 +689,7 @@ API tests:
 - daily sync create/update uniqueness;
 - plan create/complete/postpone;
 - insights generate without LLM;
-- LLM endpoint with mock success, malformed JSON, and failure.
+- analysis endpoint with template output, mock success, malformed JSON, and failure.
 
 iOS tests:
 
@@ -677,23 +726,27 @@ CI:
 
 5. Today page shows both members' daily sync status.
 
-6. Promise calendar supports at least date, anniversary, and joint task plans.
+6. A `private` daily sync appears to the partner as synced-with-hidden-content, still counts toward sync rate, and does not expose note text in shared reports.
 
-7. iOS plan cards can render a route snapshot from manual start place to destination and open Apple Maps.
+7. Promise calendar supports at least date, anniversary, and joint task plans.
 
-8. Review page displays relationship temperature, sync rate, average mood, average energy, average longing, promise stats, and 7/30 day trend deltas.
+8. Given a route-enabled plan with complete start and destination coordinates, iOS plan cards can render a route snapshot request or fallback snapshot UI and open Apple Maps.
 
-9. Without an LLM key, the app still generates local template analysis.
+9. Review page displays relationship temperature, sync rate, average mood, average energy, average longing, promise stats, and 7/30 day trend deltas.
 
-10. With an LLM key, the app can request structured JSON analysis and render shared and private sections with correct visibility.
+10. Core MVP generates local template analysis and mock LLM-shaped analysis without a real LLM key.
 
-11. Backend does not persist LLM keys.
+11. The app can render structured analysis with shared and private sections with correct visibility from template/mock output. Real LLM provider rendering is part of AI Excellence Track.
 
-12. Tests can be run with one command.
+12. Note selection for analysis is deterministic: shared sections use at most 3 `partner_visible` notes from the report period, while `private` notes are excluded from shared sections.
 
-13. CI passes.
+13. Backend does not persist LLM keys.
 
-14. README explains setup, credentials, Docker, iOS running, Web review, and limitations.
+14. Tests can be run with one command.
+
+15. CI passes.
+
+16. README explains setup, credentials, Docker, iOS running, Web review, and limitations.
 
 ## 14. Explicit Non-Goals
 
@@ -713,9 +766,9 @@ CI:
 
 ## 15. Risks and Open Questions
 
-Risk: scope is large because the project includes iOS, backend, Web, analytics, LLM, and distribution.
+Risk: scope is large because the product vision includes polished iOS, polished Web, backend, analytics, LLM, and distribution.
 
-Mitigation: MVP must prioritize shared sync cards, daily sync, promise calendar, review metrics, and Web review flow. Add-ons such as dual-origin routes and notification reminders remain optional.
+Mitigation: delivery is staged. The Core MVP is the non-negotiable reviewable slice: backend, Web review flow, shared sync cards, daily sync, promise calendar, review metrics, local template report, tests, CI, Docker, and README. iOS completeness and real LLM calls are excellence tracks that should be implemented after the Core MVP is stable.
 
 Risk: MapKit route snapshots may be harder to test in CI.
 
@@ -723,7 +776,7 @@ Mitigation: abstract route snapshot generation behind an iOS service interface; 
 
 Risk: LLM output may be unsafe or malformed.
 
-Mitigation: require JSON, validate schema, filter unsafe content, and fall back to local templates.
+Mitigation: Core MVP must work with local templates and mock LLM responses. Real provider calls require JSON, schema validation, unsafe-content checks, and local fallback.
 
 Risk: device-bound identity is not production-grade.
 
@@ -731,27 +784,40 @@ Mitigation: document it clearly as MVP identity. Keep data model extensible for 
 
 Risk: Web version could become a second full product.
 
-Mitigation: Web focuses on reviewable core flows and shares backend logic. iOS remains the primary native product.
+Mitigation: Web is limited to bounded review workflows: acting-user switch, sync card CRUD, daily sync, promise CRUD/status changes, review generation, route text/link display, demo reset, and service/LLM status. It does not implement MapKit snapshots, Keychain credential entry, mobile-responsive parity, or independent analytics logic. iOS remains the primary native product.
 
-## 16. Current MVP and Add-On Split
+## 16. Current MVP, Excellence Tracks, and Add-On Split
 
-MVP:
+Core MVP:
 
-- SwiftUI iOS app;
-- React + Vite Web experience;
 - Node.js TypeScript backend;
 - SQLite + Prisma schema;
+- React + Vite Web experience covering bounded review workflows;
 - device-bound users;
 - pairing code couple join;
 - shared sync card library;
 - daily sync;
 - promise calendar with manual route data;
-- iOS route snapshot cover;
 - review metrics and relationship temperature;
 - local template report;
-- optional LLM structured analysis;
-- Keychain API key storage;
 - tests, CI, Docker, README.
+
+iOS Excellence Track:
+
+- SwiftUI iOS app with Today, Promises, Review, and Us tabs;
+- Today screen and shared sync card selection;
+- Promises screen with MapKit route snapshot cover;
+- Review screen rendering metrics returned by the backend;
+- Us/settings screen with Keychain-backed LLM settings;
+- iOS route snapshot fallback UI for test and simulator constraints.
+
+AI/Polish Track:
+
+- optional real LLM provider calls through OpenAI-compatible settings;
+- structured LLM JSON analysis;
+- unsafe-content filtering beyond template fallback;
+- private communication draft rendering;
+- richer motion and interaction polish across iOS and Web.
 
 Add-ons:
 
