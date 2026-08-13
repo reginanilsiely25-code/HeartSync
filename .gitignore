@@ -1,2 +1,9 @@
 .superpowers/
 .worktrees/
+node_modules/
+dist/
+.env
+.env.*
+*.sqlite
+*.sqlite-journal
+.DS_Store

@@ -1,0 +1,12 @@
+{
+  "name": "heartsync",
+  "private": true,
+  "workspaces": ["apps/backend"],
+  "scripts": {
+    "test": "npm --workspace apps/backend run test",
+    "dev:backend": "npm --workspace apps/backend run dev"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
