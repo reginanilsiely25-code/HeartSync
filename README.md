@@ -1,41 +1,121 @@
 # HeartSync
 
-HeartSync is an iOS-first relationship rhythm app with a companion Web review flow and a Node.js backend. The Core MVP is planned as a monorepo with `apps/backend`, `apps/web`, and `apps/ios`.
+HeartSync is an iOS-first relationship app for couples who want a lightweight daily ritual, shared sync cards, promise planning, and gentle relationship rhythm review. The project includes a Node.js/TypeScript backend, SQLite/Prisma data model, React/Vite Web review client, SwiftUI iOS native slice, CI, Docker distribution, and course documentation.
 
-## Docker Compose
+## Project Structure
 
-After the app scaffold is present, start the review stack from the repository root:
-
-```bash
-docker compose up --build
+```text
+.
+├── apps/backend
+├── apps/web
+├── apps/ios/HeartSync
+├── docs/superpowers/specs/2026-07-08-heartsync-design.md
+├── docs/superpowers/plans/2026-08-13-heartsync-implementation.md
+├── SPEC.md
+├── PLAN.md
+├── SPEC_PROCESS.md
+├── AGENT_LOG.md
+└── REFLECTION.md
 ```
 
-The Compose stack exposes:
+## Local Development
 
-- Backend API: `http://localhost:3000`
-- Web review client: `http://localhost:5173`
+Install dependencies from the repository root:
 
-The backend stores its SQLite database in the `backend-data` Docker volume at `/app/apps/backend/prisma/dev.db` with `DATABASE_URL=file:/app/apps/backend/prisma/dev.db`.
+```bash
+npm install
+```
 
-## Local Verification
-
-CI and local verification use the same command:
+Run backend tests and Web build together:
 
 ```bash
 npm run verify
 ```
 
-The planned `verify` script runs backend tests and the Web build. GitHub Actions installs Node.js 20, runs `npm ci`, and then runs `npm run verify`.
+Start the backend:
 
-## iOS Source Distribution
+```bash
+npm run dev:backend
+```
 
-The iOS app is distributed as source for the Core MVP and course review. Reviewers should open the planned `apps/ios/HeartSync` source in Xcode and run it in the iOS simulator. HeartSync is not distributed through the App Store or TestFlight for the MVP.
+Start the Web review client:
 
-## Known Limitations
+```bash
+npm run dev:web
+```
+
+The backend health endpoint is `http://localhost:3000/health`.
+
+## Web Review URL
+
+Open the Web review client at:
+
+```text
+http://localhost:5173
+```
+
+Use the Web flow to reset demo data, switch between demo users, submit daily syncs, create or update promises, and generate relationship reviews.
+
+## Docker
+
+Validate Docker Compose configuration:
+
+```bash
+docker compose config
+```
+
+Run backend and Web together:
+
+```bash
+docker compose up --build
+```
+
+Docker exposes:
+
+- Backend API: `http://localhost:3000`
+- Web review client: `http://localhost:5173`
+
+The Compose stack stores SQLite data in the `backend-data` Docker volume at `/app/apps/backend/prisma/dev.db` with `DATABASE_URL=file:/app/apps/backend/prisma/dev.db`.
+
+## CI
+
+GitHub Actions installs Node.js 20, runs `npm ci`, and then runs:
+
+```bash
+npm run verify
+```
+
+The `verify` script runs backend tests and the Web production build.
+
+## iOS Run Instructions
+
+Open the iOS source in Xcode from:
+
+```text
+apps/ios/HeartSync
+```
+
+Select the `HeartSync` scheme and run on an available iOS simulator or device. The iOS app expects the backend to be running locally. For simulator testing, use the local backend URL configured in the iOS API client.
+
+When the Xcode project and simulator are available, run tests with:
+
+```bash
+xcodebuild test -scheme HeartSync -destination 'platform=iOS Simulator,name=iPhone 16'
+```
+
+If that simulator is not installed, choose an available iOS simulator in Xcode and record the exact destination used.
+
+## Credentials
+
+The Core MVP does not require a real LLM key. Template and mock LLM-shaped analysis work locally.
+
+For the optional AI/Polish Track, iOS stores an OpenAI-compatible API key in Keychain, sends it only for the current request, and never displays the raw value. The backend must not persist or log provider keys.
+
+## Limitations
 
 - Device-bound identity is for MVP review only.
 - Web is a bounded desktop review client, not a full iOS-equivalent client.
 - Core MVP uses local template and mock LLM analysis.
 - Real LLM provider calls are part of the AI/Polish Track.
-- No real LLM API key is required, accepted, or committed for the Core MVP.
-- The current Task 6 worktree contains distribution files only; the planned `package.json`, workspace package manifests, Prisma schema, backend source, Web source, and iOS source must be added by their implementation tasks before Docker image builds or `npm run verify` can pass.
+- iOS is distributed as source with simulator instructions, not App Store or TestFlight.
+- The app does not provide therapy, diagnosis, blame assignment, breakup advice, realtime location, route tracking, full navigation, or automatic sending of generated messages.
