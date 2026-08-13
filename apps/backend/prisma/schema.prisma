@@ -1,0 +1,157 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum DailySyncVisibility {
+  partner_visible
+  private
+}
+
+enum PlanType {
+  date
+  anniversary
+  joint_task
+}
+
+enum PlanStatus {
+  not_started
+  in_progress
+  completed
+  postponed
+}
+
+model User {
+  id           String              @id @default(cuid())
+  deviceUserId String              @unique
+  displayName  String
+  avatarColor  String
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  memberships  CoupleMember[]
+  syncCards    SyncCard[]          @relation("CreatedSyncCards")
+  dailySyncs   DailySync[]
+  suggestions  PrivateSuggestion[]
+}
+
+model Couple {
+  id                   String          @id @default(cuid())
+  pairingCode          String          @unique
+  pairingCodeExpiresAt DateTime
+  startedAt            DateTime        @default(now())
+  createdByUserId      String
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+  members              CoupleMember[]
+  syncCards            SyncCard[]
+  dailySyncs           DailySync[]
+  plans                Plan[]
+  insightReports       InsightReport[]
+}
+
+model CoupleMember {
+  coupleId String
+  userId   String
+  role     String
+  joinedAt DateTime @default(now())
+  couple   Couple   @relation(fields: [coupleId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([coupleId, userId])
+}
+
+model SyncCard {
+  id                  String      @id @default(cuid())
+  coupleId            String
+  title               String
+  emoji               String
+  color               String
+  tagsJson            String
+  defaultMoodScore    Int
+  defaultEnergyScore  Int
+  defaultLongingScore Int
+  isArchived          Boolean     @default(false)
+  createdByUserId     String
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+  couple              Couple      @relation(fields: [coupleId], references: [id], onDelete: Cascade)
+  createdBy           User        @relation("CreatedSyncCards", fields: [createdByUserId], references: [id])
+  dailySyncs          DailySync[]
+}
+
+model DailySync {
+  id           String              @id @default(cuid())
+  coupleId     String
+  userId       String
+  syncDate     DateTime
+  cardId       String
+  moodScore    Int
+  energyScore  Int
+  longingScore Int
+  tagsJson     String
+  note         String
+  visibility   DailySyncVisibility @default(partner_visible)
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  couple       Couple              @relation(fields: [coupleId], references: [id], onDelete: Cascade)
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  card         SyncCard            @relation(fields: [cardId], references: [id])
+
+  @@unique([userId, syncDate])
+}
+
+model Plan {
+  id                   String     @id @default(cuid())
+  coupleId             String
+  title                String
+  type                 PlanType
+  scheduledAt          DateTime
+  status               PlanStatus @default(not_started)
+  ownerUserId          String
+  completedAt          DateTime?
+  postponedFrom        DateTime?
+  postponeReason       String?
+  startPlaceName       String
+  startLatitude        Float?
+  startLongitude       Float?
+  destinationName      String
+  destinationLatitude  Float?
+  destinationLongitude Float?
+  notes                String
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+  couple               Couple     @relation(fields: [coupleId], references: [id], onDelete: Cascade)
+}
+
+model InsightReport {
+  id                  String              @id @default(cuid())
+  coupleId            String
+  periodType          String
+  periodStart         DateTime
+  periodEnd           DateTime
+  temperatureScore    Int
+  metricsJson         String
+  templateSummary     String
+  llmSharedSummary    String?
+  llmTrendExplanation String?
+  llmSuggestionsJson  String?
+  generatedAt         DateTime            @default(now())
+  couple              Couple              @relation(fields: [coupleId], references: [id], onDelete: Cascade)
+  privateSuggestions  PrivateSuggestion[]
+
+  @@unique([coupleId, periodType, periodStart, periodEnd])
+}
+
+model PrivateSuggestion {
+  id           String        @id @default(cuid())
+  reportId     String
+  userId       String
+  messageDraft String
+  generatedAt  DateTime      @default(now())
+  report       InsightReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
