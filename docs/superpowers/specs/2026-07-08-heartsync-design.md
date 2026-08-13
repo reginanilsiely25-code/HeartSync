@@ -105,9 +105,12 @@ Input:
 Behavior:
 
 - A user can create a couple space.
-- The backend generates a pairing code.
+- The backend generates a 6-character uppercase alphanumeric pairing code, excluding ambiguous characters `0`, `O`, `1`, and `I`.
 - Another user can join by entering the code.
 - A couple space has at most two members.
+- Pairing codes are normalized by trimming whitespace and uppercasing before lookup.
+- A pairing code expires 24 hours after creation.
+- Regenerating a pairing code invalidates the previous active code for the same couple.
 
 Output:
 
@@ -118,6 +121,7 @@ Output:
 Error handling:
 
 - invalid pairing code returns a clear error;
+- expired pairing code returns a clear error;
 - full couple returns a clear error;
 - users already in another couple cannot silently join another one.
 
@@ -212,6 +216,9 @@ Behavior:
 
 - The Promises tab is calendar-first.
 - Users can create, edit, complete, and postpone promises.
+- Completing a promise sets status to `completed` and records `completedAt`.
+- Postponing a promise requires `newScheduledAt` and optional `postponeReason`.
+- Postponing a promise sets status to `postponed`, records `postponedFrom`, records `postponeReason` when present, and updates `scheduledAt` to `newScheduledAt`.
 - Core MVP obtains coordinates only from manual input or demo seed locations.
 - Backend stores submitted place text and coordinates; it does not perform geocoding.
 - Web can display and edit place text and coordinate fields but does not search maps.
@@ -258,6 +265,15 @@ Relationship temperature formula:
 - sync stability: 35%;
 - emotional trend: 35%;
 - shared progress: 30%.
+
+Formula details:
+
+- `syncStabilityScore` = sync rate percent for the selected period.
+- `emotionalTrendScore` starts at 70, adds up to 15 points for non-negative mood trend, adds up to 10 points for non-negative energy trend, adds up to 5 points when longing is stable or improving, and is clamped to 0-100.
+- `sharedProgressScore` = completed promises divided by completed plus postponed plus overdue promises in the selected period, multiplied by 100. If there are no promises in the period, use 70 as a neutral score.
+- `relationshipTemperature` = round(`syncStabilityScore` * 0.35 + `emotionalTrendScore` * 0.35 + `sharedProgressScore` * 0.30).
+- All component scores are integers from 0 to 100.
+- If fewer than 3 daily sync records exist in the period, the report must show "insufficient data" and avoid trend claims, while still showing available raw counts.
 
 Output:
 
@@ -328,13 +344,18 @@ Visibility:
 
 Safety boundaries:
 
-- no psychological diagnosis;
-- no blame assignment;
-- no breakup advice;
-- no manipulative communication tactics;
-- no full chat history upload;
-- no private note upload;
-- no realtime location upload.
+- Unsafe categories are `diagnosis`, `blame`, `breakup_advice`, `manipulation`, `privacy_violation`, `location_tracking`, and `self_harm_or_violence`.
+- The backend checks generated `sharedSummary`, `trendExplanation`, `suggestions`, and `privateMessageDraft` before saving or returning generated text.
+- If any generated field matches an unsafe category, the backend discards the whole mock or real provider response, records matching categories in `riskFlags`, and returns local template output instead.
+- `diagnosis`: generated text claims or implies a psychological diagnosis, personality disorder, attachment disorder, or medical/mental-health conclusion.
+- `blame`: generated text assigns fault to one partner as the main explanation for relationship problems.
+- `breakup_advice`: generated text directly recommends breaking up, threatening breakup, or using breakup as leverage.
+- `manipulation`: generated text recommends guilt, jealousy, punishment, silent treatment, coercion, or strategic withholding.
+- `privacy_violation`: generated text asks for full chat history, private note exposure, hidden monitoring, or secret access to a partner's device/account.
+- `location_tracking`: generated text asks for realtime location tracking or location history beyond user-entered promise route data.
+- `self_harm_or_violence`: generated text includes self-harm, threats, violence, or instructions for harm.
+- Local template fallback text must avoid all unsafe categories.
+- The UI shows a neutral fallback state such as "We used a safer local reflection because AI output was unavailable or unsuitable" without exposing unsafe text.
 
 ### 5.8 Web Experience
 
@@ -399,9 +420,9 @@ Boundary conditions:
 
 ### 6.4 Performance
 
-- Today page should load quickly from cached or recent API data.
-- Review metrics should be computed within normal interactive latency for demo-scale data.
-- Map snapshot generation should not block the rest of the plan UI.
+- For demo-scale data of 2 users, 30 daily sync records, 20 plans, and 20 sync cards, `GET /couples/:coupleId/today` should return in under 300 ms on a local development machine.
+- For the same demo-scale data, `POST /couples/:coupleId/insights/generate` with local template or mock provider should return in under 800 ms on a local development machine.
+- Map snapshot generation is asynchronous in the iOS view layer and must not block rendering of plan title, date, status, and fallback cover.
 
 ### 6.5 Observability
 
@@ -452,6 +473,7 @@ Constraints:
 
 - `id`
 - `pairingCode`
+- `pairingCodeExpiresAt`
 - `startedAt`
 - `createdByUserId`
 - `createdAt`
@@ -525,6 +547,9 @@ Constraints:
 - `scheduledAt`
 - `status`
 - `ownerUserId`
+- `completedAt`
+- `postponedFrom`
+- `postponeReason`
 - `startPlaceName`
 - `startLatitude`
 - `startLongitude`
@@ -539,6 +564,8 @@ Constraints:
 
 - `type` is one of date, anniversary, joint task.
 - `status` is one of not started, in progress, completed, postponed.
+- `completedAt` is set only when status is completed.
+- `postponedFrom` is set only when status is postponed.
 - latitude and longitude fields are nullable.
 - a route-enabled plan must include all four coordinate values: start latitude, start longitude, destination latitude, and destination longitude.
 - plans without complete coordinates must render a fallback cover and must not attempt route snapshot generation.
@@ -671,6 +698,7 @@ Distribution:
 Unit tests:
 
 - relationship temperature formula;
+- insufficient-data behavior for review reports with fewer than 3 daily sync records;
 - sync rate;
 - average mood/energy/longing;
 - trend deltas;
@@ -678,18 +706,20 @@ Unit tests:
 - card score validation;
 - local report template generation;
 - deterministic note selection for analysis: selected notes preferred over automatic latest notes, max 3 shared notes, private notes excluded from shared inputs, and latest 1 private note allowed only for private message draft;
+- unsafe analysis detection: each unsafe category can be matched, unsafe provider output is discarded, risk flags are recorded, and local template fallback is returned;
 - mock LLM JSON parsing and fallback.
 
 API tests:
 
 - device user creation;
 - couple creation and join;
+- pairing code normalization, expiry, regeneration, full-couple rejection, and already-in-couple rejection;
 - max two couple members;
 - sync card CRUD and archive;
 - daily sync create/update uniqueness;
-- plan create/complete/postpone;
+- plan create/complete/postpone, including required `newScheduledAt` for postponement and `completedAt`/`postponedFrom` updates;
 - insights generate without LLM;
-- analysis endpoint with template output, mock success, malformed JSON, and failure.
+- analysis endpoint with template output, mock success, malformed JSON, unsafe output, and provider failure.
 
 iOS tests:
 
@@ -709,10 +739,11 @@ Web tests:
 
 CI:
 
-- a `unit-test` job must run core tests;
-- backend tests are required;
-- Web build is required;
-- Docker image/build should be checked if Docker distribution is selected.
+- `npm run test` must run backend unit and API tests.
+- `npm run build:web` must build the Web app.
+- `npm run verify` must run tests plus Web build.
+- CI must run `npm run verify`.
+- Docker distribution check must run `docker compose config` and a backend image build when Docker is available.
 
 ## 13. Acceptance Criteria
 
@@ -720,33 +751,41 @@ CI:
 
 2. iOS app can create a device-bound user and join or create a couple with a pairing code.
 
-3. Couple members can create and edit shared sync cards with explicit score mappings.
+3. Pairing code behavior is deterministic: codes are 6-character uppercase alphanumeric strings without ambiguous characters, expire after 24 hours, normalize lowercase/whitespace input, reject full couples, and reject users already in another couple.
 
-4. Each user can submit or update one daily sync per day.
+4. Couple members can create and edit shared sync cards with explicit score mappings.
 
-5. Today page shows both members' daily sync status.
+5. Each user can submit or update one daily sync per day.
 
-6. A `private` daily sync appears to the partner as synced-with-hidden-content, still counts toward sync rate, and does not expose note text in shared reports.
+6. Today page shows both members' daily sync status.
 
-7. Promise calendar supports at least date, anniversary, and joint task plans.
+7. A `private` daily sync appears to the partner as synced-with-hidden-content, still counts toward sync rate, and does not expose note text in shared reports.
 
-8. Given a route-enabled plan with complete start and destination coordinates, iOS plan cards can render a route snapshot request or fallback snapshot UI and open Apple Maps.
+8. Promise calendar supports at least date, anniversary, and joint task plans.
 
-9. Review page displays relationship temperature, sync rate, average mood, average energy, average longing, promise stats, and 7/30 day trend deltas.
+9. Completing a promise records `completedAt`; postponing a promise requires `newScheduledAt`, records `postponedFrom`, updates `scheduledAt`, and keeps an optional `postponeReason`.
 
-10. Core MVP generates local template analysis and mock LLM-shaped analysis without a real LLM key.
+10. Given a route-enabled plan with complete start and destination coordinates, iOS plan cards can render a route snapshot request or fallback snapshot UI and open Apple Maps.
 
-11. The app can render structured analysis with shared and private sections with correct visibility from template/mock output. Real LLM provider rendering is part of AI Excellence Track.
+11. Review page displays relationship temperature, sync rate, average mood, average energy, average longing, promise stats, and 7/30 day trend deltas computed from the specified formula.
 
-12. Note selection for analysis is deterministic: shared sections use at most 3 `partner_visible` notes from the report period, while `private` notes are excluded from shared sections.
+12. Reports with fewer than 3 daily sync records show "insufficient data" for trend claims while still showing available raw counts.
 
-13. Backend does not persist LLM keys.
+13. Core MVP generates local template analysis and mock LLM-shaped analysis without a real LLM key.
 
-14. Tests can be run with one command.
+14. The app can render structured analysis with shared and private sections with correct visibility from template/mock output. Real LLM provider rendering is part of AI Excellence Track.
 
-15. CI passes.
+15. Note selection for analysis is deterministic: shared sections use at most 3 `partner_visible` notes from the report period, while `private` notes are excluded from shared sections.
 
-16. README explains setup, credentials, Docker, iOS running, Web review, and limitations.
+16. Unsafe mock or real provider output is never returned to clients: the backend records `riskFlags` and returns local template fallback instead.
+
+17. Backend does not persist LLM keys.
+
+18. `npm run verify` runs backend tests and Web build with one command.
+
+19. CI runs `npm run verify` successfully.
+
+20. README explains setup, credentials, Docker, iOS running, Web review, and limitations.
 
 ## 14. Explicit Non-Goals
 
