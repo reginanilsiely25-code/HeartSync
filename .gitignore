@@ -8,3 +8,4 @@ dist/
 *.sqlite-journal
 DerivedData/
 .DS_Store
+apps/web/dist/
