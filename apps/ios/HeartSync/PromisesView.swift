@@ -44,7 +44,7 @@ struct PromisesView: View {
                 }
                 .padding()
             }
-            .navigationTitle("Promises")
+            .navigationTitle("约定计划")
             .task {
                 await viewModel.loadRouteSnapshots()
             }
@@ -88,7 +88,7 @@ private struct PromiseCard: View {
             Button {
                 AppleMapsOpenHelper.openRoute(for: plan)
             } label: {
-                Label("Open in Maps", systemImage: "map")
+                Label("在地图中打开", systemImage: "map")
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.bordered)
@@ -119,7 +119,7 @@ private struct PromiseCard: View {
             VStack(alignment: .leading, spacing: 8) {
                 Image(systemName: canOpenMaps ? "map" : "mappin.slash")
                     .font(.title2)
-                Text(canOpenMaps ? "Route snapshot loading" : "Add all route coordinates for a map cover")
+                Text(canOpenMaps ? "路线封面生成中" : "补全路线坐标后可生成地图封面")
                     .font(.subheadline.weight(.medium))
                 Text(routeText)
                     .font(.caption)
@@ -133,9 +133,9 @@ private struct PromiseCard: View {
     }
 
     private var routeText: String {
-        let start = plan.startPlaceName ?? "Start not set"
-        let destination = plan.destinationName ?? "Destination not set"
-        return "\(start) to \(destination)"
+        let start = plan.startPlaceName ?? "未设置出发地"
+        let destination = plan.destinationName ?? "未设置目的地"
+        return "\(start) 到 \(destination)"
     }
 
     private func formattedDate(_ value: String) -> String {

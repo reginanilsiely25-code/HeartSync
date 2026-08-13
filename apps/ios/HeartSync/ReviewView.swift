@@ -25,14 +25,14 @@ struct ReviewView: View {
                 }
                 .padding()
             }
-            .navigationTitle("Review")
+            .navigationTitle("关系回顾")
         }
     }
 
     private var periodPicker: some View {
-        Picker("Period", selection: $viewModel.selectedPeriod) {
+        Picker("周期", selection: $viewModel.selectedPeriod) {
             ForEach(InsightPeriod.allCases) { period in
-                Text(period.rawValue.capitalized).tag(period)
+                Text(period.label).tag(period)
             }
         }
         .pickerStyle(.segmented)
@@ -40,7 +40,7 @@ struct ReviewView: View {
 
     private var temperatureCard: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Relationship temperature")
+            Text("关系温度")
                 .font(.headline)
             HStack(alignment: .lastTextBaseline, spacing: 6) {
                 Text("\(viewModel.insight.temperatureScore)")
@@ -61,23 +61,23 @@ struct ReviewView: View {
     private var metricsGrid: some View {
         let metrics = viewModel.insight.metrics
         return LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 12)], spacing: 12) {
-            metricTile("Sync rate", "\(metrics.syncRatePercent)%")
-            metricTile("Mood", String(format: "%.1f", metrics.averageMood))
-            metricTile("Energy", String(format: "%.1f", metrics.averageEnergy))
-            metricTile("Longing", String(format: "%.1f", metrics.averageLonging))
-            metricTile("Low mood days", "\(metrics.lowMoodDays)")
-            metricTile("Promises done", "\(metrics.completedPromises)")
+            metricTile("同步率", "\(metrics.syncRatePercent)%")
+            metricTile("心情", String(format: "%.1f", metrics.averageMood))
+            metricTile("能量", String(format: "%.1f", metrics.averageEnergy))
+            metricTile("想念", String(format: "%.1f", metrics.averageLonging))
+            metricTile("低心情天数", "\(metrics.lowMoodDays)")
+            metricTile("已完成约定", "\(metrics.completedPromises)")
         }
     }
 
     private var analysisSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Shared reflection")
+            Text("共享复盘")
                 .font(.headline)
 
             if viewModel.insight.analysis.usedUnsafeFallback {
                 Label(
-                    "We used a safer local reflection because AI output was unavailable or unsuitable.",
+                    "AI 输出不可用或不适合展示时，系统会使用更安全的本地复盘。",
                     systemImage: "shield.lefthalf.filled"
                 )
                 .font(.callout)
@@ -103,7 +103,7 @@ struct ReviewView: View {
 
     private var privateDraftSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Private draft")
+            Text("私密草稿")
                 .font(.headline)
             Text(viewModel.insight.analysis.privateMessageDraft)
                 .font(.body)

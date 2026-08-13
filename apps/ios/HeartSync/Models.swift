@@ -9,9 +9,9 @@ enum DailySyncVisibility: String, Codable, CaseIterable, Identifiable, Equatable
     var label: String {
         switch self {
         case .partnerVisible:
-            return "Partner visible"
+            return "伴侣可见"
         case .private:
-            return "Private"
+            return "仅自己可见"
         }
     }
 }
@@ -27,13 +27,13 @@ enum PlanStatus: String, Codable, CaseIterable, Identifiable, Equatable {
     var label: String {
         switch self {
         case .notStarted:
-            return "Not started"
+            return "未开始"
         case .inProgress:
-            return "In progress"
+            return "进行中"
         case .completed:
-            return "Completed"
+            return "已完成"
         case .postponed:
-            return "Postponed"
+            return "已延期"
         }
     }
 }
@@ -48,11 +48,11 @@ enum PlanType: String, Codable, CaseIterable, Identifiable, Equatable {
     var label: String {
         switch self {
         case .date:
-            return "Date"
+            return "约会"
         case .anniversary:
-            return "Anniversary"
+            return "纪念日"
         case .jointTask:
-            return "Joint task"
+            return "共同任务"
         }
     }
 }
@@ -62,6 +62,15 @@ enum InsightPeriod: String, Codable, CaseIterable, Identifiable, Equatable {
     case month
 
     var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .week:
+            return "本周"
+        case .month:
+            return "本月"
+        }
+    }
 }
 
 enum LLMSettingsStatus: Equatable {
@@ -71,9 +80,9 @@ enum LLMSettingsStatus: Equatable {
     var label: String {
         switch self {
         case .configured:
-            return "Configured"
+            return "已配置"
         case .unconfigured:
-            return "Unconfigured"
+            return "未配置"
         }
     }
 }
@@ -269,24 +278,24 @@ enum HeartSyncPreviewData {
     static let currentUser = UserDTO(
         id: "user-a",
         deviceUserId: "device-a",
-        displayName: "Ava",
+        displayName: "小晴",
         avatarColor: "#E85D75"
     )
 
     static let partner = UserDTO(
         id: "user-b",
         deviceUserId: "device-b",
-        displayName: "Bo",
+        displayName: "阿屿",
         avatarColor: "#2F80ED"
     )
 
     static let cards = [
         SyncCardDTO(
             id: "card-glow",
-            title: "Glowing today",
-            emoji: "sun",
+            title: "今天亮晶晶",
+            emoji: "✨",
             colorHex: "#FFE7A3",
-            tags: ["light", "open"],
+            tags: ["开心", "敞亮"],
             defaultMoodScore: 5,
             defaultEnergyScore: 4,
             defaultLongingScore: 3,
@@ -294,10 +303,10 @@ enum HeartSyncPreviewData {
         ),
         SyncCardDTO(
             id: "card-hug",
-            title: "Need a hug",
-            emoji: "hug",
+            title: "想要一个抱抱",
+            emoji: "🤍",
             colorHex: "#FFD6E0",
-            tags: ["tender", "tired"],
+            tags: ["柔软", "疲惫"],
             defaultMoodScore: 3,
             defaultEnergyScore: 2,
             defaultLongingScore: 5,
@@ -322,7 +331,7 @@ enum HeartSyncPreviewData {
                     energyScore: 4,
                     longingScore: 3,
                     tags: cards[0].tags,
-                    note: "A good day for a short walk together.",
+                    note: "今天很适合一起短短散个步。",
                     visibility: .partnerVisible
                 )
             ),
@@ -351,7 +360,7 @@ enum HeartSyncPreviewData {
         PlanDTO(
             id: "plan-route",
             coupleId: "couple-1",
-            title: "Museum afternoon",
+            title: "博物馆下午",
             type: .date,
             scheduledAt: "2026-08-14T10:00:00Z",
             status: .inProgress,
@@ -359,18 +368,18 @@ enum HeartSyncPreviewData {
             completedAt: nil,
             postponedFrom: nil,
             postponeReason: nil,
-            startPlaceName: "Home",
+            startPlaceName: "家",
             startLatitude: 31.2304,
             startLongitude: 121.4737,
-            destinationName: "Museum",
+            destinationName: "博物馆",
             destinationLatitude: 31.2397,
             destinationLongitude: 121.4998,
-            notes: "Bring tea"
+            notes: "记得带茶"
         ),
         PlanDTO(
             id: "plan-fallback",
             coupleId: "couple-1",
-            title: "Friday call",
+            title: "周五电话",
             type: .jointTask,
             scheduledAt: "2026-08-16T12:30:00Z",
             status: .notStarted,
@@ -381,10 +390,10 @@ enum HeartSyncPreviewData {
             startPlaceName: nil,
             startLatitude: nil,
             startLongitude: nil,
-            destinationName: "Video room",
+            destinationName: "视频房间",
             destinationLatitude: nil,
             destinationLongitude: nil,
-            notes: "Keep it low pressure"
+            notes: "轻松一点聊"
         )
     ]
 
@@ -408,15 +417,15 @@ enum HeartSyncPreviewData {
             sharedProgressScore: 70,
             insufficientData: false
         ),
-        templateSummary: "You stayed mostly in rhythm this week, with one slower day and steady longing.",
+        templateSummary: "这一周你们大体保持了同步节奏，有一天慢了一些，但想念很稳定。",
         analysis: LLMAnalysisDTO(
-            sharedSummary: "Your check-ins are consistent and gentle.",
-            trendExplanation: "Energy dipped slightly while longing stayed high.",
+            sharedSummary: "你们的同步稳定又温柔。",
+            trendExplanation: "能量略有下降，但想念保持在比较高的位置。",
             suggestions: [
-                "Plan one low-effort shared moment.",
-                "Use a short note when energy is low."
+                "安排一个低负担的共同片刻。",
+                "能量低的时候，用一句短笔记也可以。"
             ],
-            privateMessageDraft: "I am a little tired today, but I still want to be close to you.",
+            privateMessageDraft: "我今天有一点累，但还是想和你靠近一点。",
             riskFlags: [],
             usedUnsafeFallback: false
         ),
@@ -425,9 +434,9 @@ enum HeartSyncPreviewData {
 
     static let couple = CoupleDTO(
         id: "couple-1",
-        displayName: "Ava and Bo",
+        displayName: "小晴和阿屿",
         pairingCode: "AB2CDE",
         members: [currentUser, partner],
-        serviceStatus: "healthy"
+        serviceStatus: "健康"
     )
 }

@@ -4,8 +4,9 @@
   "workspaces": ["apps/backend", "apps/web"],
   "scripts": {
     "test": "npm --workspace apps/backend run test",
+    "test:web": "npm --workspace apps/web run test",
     "build:web": "npm --workspace apps/web run build",
-    "verify": "npm run test && npm run build:web",
+    "verify": "npm run test && npm run test:web && npm run build:web",
     "dev:backend": "npm --workspace apps/backend run dev",
     "dev:web": "npm --workspace apps/web run dev"
   },

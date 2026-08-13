@@ -14,11 +14,16 @@ type AppShellProps = {
 };
 
 const tabs: Array<{ id: AppTab; label: string; icon: ComponentType<{ size?: number }> }> = [
-  { id: "today", label: "Today", icon: Home },
-  { id: "promises", label: "Promises", icon: CalendarCheck },
-  { id: "review", label: "Review", icon: HeartPulse },
-  { id: "us", label: "Us", icon: Sparkles }
+  { id: "today", label: "今日同步", icon: Home },
+  { id: "promises", label: "约定计划", icon: CalendarCheck },
+  { id: "review", label: "关系回顾", icon: HeartPulse },
+  { id: "us", label: "我们的空间", icon: Sparkles }
 ];
+
+const serviceStatusLabels: Record<string, string> = {
+  "local-demo": "本地演示",
+  "backend-ready": "后端已连接"
+};
 
 export default function AppShell({ activeTab, actingUser, metrics, serviceStatus, children, onTabChange }: AppShellProps) {
   return (
@@ -28,11 +33,11 @@ export default function AppShell({ activeTab, actingUser, metrics, serviceStatus
           <div className="brand-mark">HS</div>
           <div>
             <p className="eyebrow">HeartSync</p>
-            <h1>Couple Review</h1>
+            <h1>恋爱节奏复盘</h1>
           </div>
         </div>
 
-        <nav className="tab-list" aria-label="HeartSync sections">
+        <nav className="tab-list" aria-label="HeartSync 功能区">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
@@ -50,24 +55,24 @@ export default function AppShell({ activeTab, actingUser, metrics, serviceStatus
         </nav>
 
         <section className="side-panel">
-          <p className="eyebrow">Acting user</p>
+          <p className="eyebrow">当前视角</p>
           <div className="user-chip">
             <span className="avatar-dot" style={{ background: actingUser.avatarColor }} />
             <strong>{actingUser.displayName}</strong>
           </div>
           <div className="mini-metrics">
-            <span>Temperature</span>
+            <span>关系温度</span>
             <strong>{metrics.relationshipTemperature}</strong>
           </div>
           <div className="mini-metrics">
-            <span>Sync rate</span>
+            <span>同步率</span>
             <strong>{metrics.syncRate}%</strong>
           </div>
         </section>
 
         <div className="status-pill">
           <RefreshCcw size={15} />
-          <span>{serviceStatus}</span>
+          <span>{serviceStatusLabels[serviceStatus] ?? serviceStatus}</span>
         </div>
       </aside>
 

@@ -38,6 +38,19 @@ const emptyPlan: PlanDraft = {
   notes: ""
 };
 
+const planTypeLabels: Record<PlanPayload["type"], string> = {
+  date: "约会",
+  anniversary: "纪念日",
+  joint_task: "共同任务"
+};
+
+const planStatusLabels: Record<string, string> = {
+  not_started: "未开始",
+  in_progress: "进行中",
+  completed: "已完成",
+  postponed: "已延期"
+};
+
 function optionalNumber(value: string): number | undefined {
   const parsed = Number(value);
   return value.trim() === "" || Number.isNaN(parsed) ? undefined : parsed;
@@ -54,7 +67,7 @@ export default function PromisesView({
   const [draft, setDraft] = useState<PlanDraft>(emptyPlan);
   const [postponePlanId, setPostponePlanId] = useState<string | null>(null);
   const [newScheduledAt, setNewScheduledAt] = useState("2026-08-20T19:00");
-  const [postponeReason, setPostponeReason] = useState("Need a calmer evening.");
+  const [postponeReason, setPostponeReason] = useState("想换一个更从容的晚上。");
 
   function updateDraft<K extends keyof PlanDraft>(field: K, value: PlanDraft[K]) {
     setDraft((current) => ({ ...current, [field]: value }));
@@ -82,53 +95,55 @@ export default function PromisesView({
     <section className="view-stack">
       <div className="view-header">
         <div>
-          <p className="eyebrow">Shared plans</p>
-          <h2>Promises</h2>
+          <p className="eyebrow">共同约定</p>
+          <h2>约定计划</h2>
         </div>
-        <span className="status-pill">Calendar-first review</span>
+        <span className="status-pill">日历优先复盘</span>
       </div>
 
       <div className="two-column wide-left">
         <section className="panel">
           <div className="section-title">
-            <h3>Create a promise</h3>
-            <span className="muted-text">Manual place text plus optional coordinates</span>
+            <h3>创建约定</h3>
+            <span className="muted-text">地点文字必填，坐标可选</span>
           </div>
           <div className="form-grid">
             <label>
-              Title
-              <input value={draft.title} onChange={(event) => updateDraft("title", event.target.value)} placeholder="Dinner after demo" />
+              标题
+              <input value={draft.title} onChange={(event) => updateDraft("title", event.target.value)} placeholder="演示结束后的晚餐" />
             </label>
             <label>
-              Type
+              类型
               <select value={draft.type} onChange={(event) => updateDraft("type", event.target.value as PlanPayload["type"])}>
-                <option value="date">Date</option>
-                <option value="anniversary">Anniversary</option>
-                <option value="joint_task">Joint task</option>
+                {Object.entries(planTypeLabels).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
               </select>
             </label>
             <label>
-              Scheduled
+              时间
               <input type="datetime-local" value={draft.scheduledAt} onChange={(event) => updateDraft("scheduledAt", event.target.value)} />
             </label>
             <label>
-              Start place
+              出发地
               <input value={draft.startPlaceText} onChange={(event) => updateDraft("startPlaceText", event.target.value)} />
             </label>
             <label>
-              Destination
+              目的地
               <input value={draft.destinationText} onChange={(event) => updateDraft("destinationText", event.target.value)} />
             </label>
             <label>
-              Start lat
+              出发纬度
               <input inputMode="decimal" value={draft.startLatitude} onChange={(event) => updateDraft("startLatitude", event.target.value)} />
             </label>
             <label>
-              Start lon
+              出发经度
               <input inputMode="decimal" value={draft.startLongitude} onChange={(event) => updateDraft("startLongitude", event.target.value)} />
             </label>
             <label>
-              Destination lat
+              目的地纬度
               <input
                 inputMode="decimal"
                 value={draft.destinationLatitude}
@@ -136,7 +151,7 @@ export default function PromisesView({
               />
             </label>
             <label>
-              Destination lon
+              目的地经度
               <input
                 inputMode="decimal"
                 value={draft.destinationLongitude}
@@ -144,13 +159,13 @@ export default function PromisesView({
               />
             </label>
             <label className="span-two">
-              Notes
+              备注
               <textarea value={draft.notes} onChange={(event) => updateDraft("notes", event.target.value)} />
             </label>
           </div>
           <button className="primary-button" type="button" onClick={submitPlan}>
             <MapPinned size={17} />
-            Add promise
+            添加约定
           </button>
         </section>
 
@@ -163,25 +178,25 @@ export default function PromisesView({
               <article key={plan.id} className="plan-card">
                 <div className={`route-cover ${completeRoute ? "has-route" : ""}`}>
                   <MapPinned size={22} />
-                  <span>{completeRoute ? "Route coordinates ready" : "Fallback cover: coordinates incomplete"}</span>
+                  <span>{completeRoute ? "路线坐标已就绪" : "坐标不完整，使用默认封面"}</span>
                 </div>
                 <div className="plan-body">
                   <div className="row-heading">
                     <h3>{plan.title}</h3>
-                    <span className={`status-tag status-${plan.status}`}>{plan.status.replace("_", " ")}</span>
+                    <span className={`status-tag status-${plan.status}`}>{planStatusLabels[plan.status]}</span>
                   </div>
                   <p className="muted-text">
-                    {plan.scheduledAt} · owner {owner?.displayName ?? "Unknown"}
+                    {plan.scheduledAt} · 负责人 {owner?.displayName ?? "未知"}
                   </p>
                   <p>
-                    {plan.startPlaceText || "Start TBD"} → {plan.destinationText}
+                    {plan.startPlaceText || "未填写出发地"} → {plan.destinationText}
                   </p>
                   <div className="inline-metrics">
                     <span>
-                      Start {plan.startLatitude ?? "?"}, {plan.startLongitude ?? "?"}
+                      出发 {plan.startLatitude ?? "?"}, {plan.startLongitude ?? "?"}
                     </span>
                     <span>
-                      Destination {plan.destinationLatitude ?? "?"}, {plan.destinationLongitude ?? "?"}
+                      目的地 {plan.destinationLatitude ?? "?"}, {plan.destinationLongitude ?? "?"}
                     </span>
                   </div>
                   {plan.notes && <p className="note-text">{plan.notes}</p>}
@@ -190,22 +205,22 @@ export default function PromisesView({
                       <input type="datetime-local" value={newScheduledAt} onChange={(event) => setNewScheduledAt(event.target.value)} />
                       <input value={postponeReason} onChange={(event) => setPostponeReason(event.target.value)} />
                       <button type="button" onClick={() => onPostponePlan(plan.id, newScheduledAt, postponeReason)}>
-                        Save postpone
+                        保存延期
                       </button>
                     </div>
                   )}
                   <div className="card-actions">
                     <a className="secondary-button" href={appleMapsUrl(plan)} target="_blank" rel="noreferrer">
                       <ExternalLink size={16} />
-                      Apple Maps
+                      苹果地图
                     </a>
                     <button className="secondary-button" type="button" onClick={() => onCompletePlan(plan.id)}>
                       <CheckCircle2 size={16} />
-                      Complete
+                      完成
                     </button>
                     <button className="secondary-button" type="button" onClick={() => setPostponePlanId(plan.id)}>
                       <PauseCircle size={16} />
-                      Postpone
+                      延期
                     </button>
                   </div>
                 </div>

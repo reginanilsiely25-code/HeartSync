@@ -5,22 +5,22 @@ struct ContentView: View {
         TabView {
             TodayView()
                 .tabItem {
-                    Label("Today", systemImage: "heart.text.square")
+                    Label("今日同步", systemImage: "heart.text.square")
                 }
 
             PromisesView()
                 .tabItem {
-                    Label("Promises", systemImage: "calendar.badge.heart")
+                    Label("约定计划", systemImage: "calendar.badge.heart")
                 }
 
             ReviewView()
                 .tabItem {
-                    Label("Review", systemImage: "chart.line.uptrend.xyaxis")
+                    Label("关系回顾", systemImage: "chart.line.uptrend.xyaxis")
                 }
 
             UsView()
                 .tabItem {
-                    Label("Us", systemImage: "person.2")
+                    Label("我们的空间", systemImage: "person.2")
                 }
         }
     }

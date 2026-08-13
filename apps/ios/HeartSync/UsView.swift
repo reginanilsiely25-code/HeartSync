@@ -29,9 +29,9 @@ final class UsSettingsViewModel: ObservableObject {
             try settingsStore.save(baseURL: baseURL, model: model, apiKey: apiKey)
             apiKey = ""
             refreshStatus()
-            saveMessage = "LLM setting saved"
+            saveMessage = "LLM 设置已保存"
         } catch {
-            saveMessage = "Could not save LLM setting"
+            saveMessage = "LLM 设置保存失败"
         }
     }
 
@@ -42,9 +42,9 @@ final class UsSettingsViewModel: ObservableObject {
             model = ""
             apiKey = ""
             refreshStatus()
-            saveMessage = "LLM setting cleared"
+            saveMessage = "LLM 设置已清除"
         } catch {
-            saveMessage = "Could not clear LLM setting"
+            saveMessage = "LLM 设置清除失败"
         }
     }
 }
@@ -55,13 +55,13 @@ struct UsView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Couple") {
-                    LabeledContent("Space", value: viewModel.couple.displayName ?? "HeartSync")
-                    LabeledContent("Pairing code", value: viewModel.couple.pairingCode ?? "Unavailable")
-                    LabeledContent("Service", value: viewModel.couple.serviceStatus ?? "Unknown")
+                Section("情侣空间") {
+                    LabeledContent("空间", value: viewModel.couple.displayName ?? "HeartSync")
+                    LabeledContent("配对码", value: viewModel.couple.pairingCode ?? "不可用")
+                    LabeledContent("服务", value: viewModel.couple.serviceStatus ?? "未知")
                 }
 
-                Section("Members") {
+                Section("成员") {
                     ForEach(viewModel.couple.members) { member in
                         HStack {
                             Circle()
@@ -74,17 +74,17 @@ struct UsView: View {
                 }
 
                 Section("LLM") {
-                    LabeledContent("Status", value: viewModel.llmStatus.label)
-                    TextField("Base URL", text: $viewModel.baseURL)
+                    LabeledContent("状态", value: viewModel.llmStatus.label)
+                    TextField("服务地址", text: $viewModel.baseURL)
                         .textContentType(.URL)
-                    TextField("Model", text: $viewModel.model)
-                    SecureField("API key", text: $viewModel.apiKey)
+                    TextField("模型", text: $viewModel.model)
+                    SecureField("API 密钥", text: $viewModel.apiKey)
 
                     HStack {
-                        Button("Save") {
+                        Button("保存") {
                             viewModel.saveLLMSettings()
                         }
-                        Button("Clear", role: .destructive) {
+                        Button("清除", role: .destructive) {
                             viewModel.clearLLMSettings()
                         }
                     }
@@ -96,7 +96,7 @@ struct UsView: View {
                     }
                 }
             }
-            .navigationTitle("Us")
+            .navigationTitle("我们的空间")
         }
     }
 }

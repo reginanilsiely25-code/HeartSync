@@ -37,40 +37,40 @@ export default function ReviewView({ actingDeviceUserId, metrics, state }: Revie
     <section className="view-stack">
       <div className="view-header">
         <div>
-          <p className="eyebrow">Trend reflection</p>
-          <h2>Review</h2>
+          <p className="eyebrow">趋势复盘</p>
+          <h2>关系回顾</h2>
         </div>
         <div className="temperature-ring">
           <span>{metrics.relationshipTemperature}</span>
-          <small>temperature</small>
+          <small>关系温度</small>
         </div>
       </div>
 
       <div className="metrics-grid">
         <article className="metric-card">
-          <span>Sync rate</span>
+          <span>同步率</span>
           <strong>{metrics.syncRate}%</strong>
         </article>
         <article className="metric-card">
-          <span>Avg mood</span>
-          <strong>{metrics.averageMood ?? "n/a"}</strong>
+          <span>平均心情</span>
+          <strong>{metrics.averageMood ?? "暂无"}</strong>
         </article>
         <article className="metric-card">
-          <span>Avg energy</span>
-          <strong>{metrics.averageEnergy ?? "n/a"}</strong>
+          <span>平均能量</span>
+          <strong>{metrics.averageEnergy ?? "暂无"}</strong>
         </article>
         <article className="metric-card">
-          <span>Avg longing</span>
-          <strong>{metrics.averageLonging ?? "n/a"}</strong>
+          <span>平均想念</span>
+          <strong>{metrics.averageLonging ?? "暂无"}</strong>
         </article>
         <article className="metric-card">
-          <span>Low mood days</span>
+          <span>低心情天数</span>
           <strong>{metrics.lowMoodDays}</strong>
         </article>
         <article className="metric-card">
-          <span>Promises</span>
+          <span>约定</span>
           <strong>
-            {metrics.completedPromises} done / {metrics.postponedPromises} moved
+            完成 {metrics.completedPromises} / 延期 {metrics.postponedPromises}
           </strong>
         </article>
       </div>
@@ -78,15 +78,15 @@ export default function ReviewView({ actingDeviceUserId, metrics, state }: Revie
       {metrics.insufficientData && (
         <div className="notice">
           <AlertTriangle size={17} />
-          <span>Insufficient data for trend claims. Raw counts are still shown for review.</span>
+          <span>数据还不够做趋势判断，当前先展示原始计数供复盘。</span>
         </div>
       )}
 
       <div className="two-column">
         <section className="panel">
           <div className="section-title">
-            <h3>Note selection</h3>
-            <span className="muted-text">Shared review input capped at 3 notes</span>
+            <h3>选择共享笔记</h3>
+            <span className="muted-text">共享复盘最多使用 3 条</span>
           </div>
           {visibleNotes.map((note) => {
             const card = findCard(state, note.cardId);
@@ -97,7 +97,7 @@ export default function ReviewView({ actingDeviceUserId, metrics, state }: Revie
               <label key={note.id} className={`note-option ${disabled ? "is-disabled" : ""}`}>
                 <input checked={checked} disabled={disabled} type="checkbox" onChange={() => toggleNote(note.id)} />
                 <span>
-                  <strong>{card?.title ?? "Sync note"}</strong>
+                  <strong>{card?.title ?? "同步笔记"}</strong>
                   <small>
                     {note.syncDate} · {note.note.slice(0, 120)}
                   </small>
@@ -109,43 +109,42 @@ export default function ReviewView({ actingDeviceUserId, metrics, state }: Revie
 
         <section className="panel">
           <div className="section-title">
-            <h3>Local template / mock sections</h3>
-            <span className="muted-text">No real LLM key is accepted by Web MVP</span>
+            <h3>本地模板 / 模拟分析</h3>
+            <span className="muted-text">网页端 MVP 不接收真实大模型密钥</span>
           </div>
           <div className="insight-block">
             <FileText size={18} />
             <div>
-              <strong>Shared summary</strong>
+              <strong>共享总结</strong>
               <p>
-                This period shows a steady ritual with {metrics.syncRate}% sync coverage. The selected notes point to small moments
-                that are concrete enough to discuss without turning them into a verdict.
+                这一阶段的同步覆盖率是 {metrics.syncRate}%。被选中的笔记都指向具体的小瞬间，适合温和讨论，而不是给关系下结论。
               </p>
             </div>
           </div>
           <div className="insight-block">
             <ShieldCheck size={18} />
             <div>
-              <strong>Unsafe fallback status</strong>
+              <strong>安全回退状态</strong>
               <p>
                 {unsafeFallback
-                  ? "We used a safer local reflection because AI output was unavailable or unsuitable."
-                  : "Local template mode is active."}
+                  ? "AI 输出不可用或不适合展示时，系统会使用更安全的本地复盘。"
+                  : "当前启用本地模板模式。"}
               </p>
             </div>
           </div>
           <div className="insight-block">
             <Lock size={18} />
             <div>
-              <strong>Private draft visible to {actingUser.displayName}</strong>
+              <strong>{actingUser.displayName} 可见的私密草稿</strong>
               <p>
                 {privateDraftNote
-                  ? `I have been holding this privately: "${privateDraftNote}". Could we make a gentle pocket of time for it?`
-                  : "No private draft source is available for the acting user yet."}
+                  ? `我把这件事先放在心里：「${privateDraftNote}」。我们可以找一个轻一点的时间聊聊吗？`
+                  : "当前视角还没有可生成私密草稿的笔记。"}
               </p>
             </div>
           </div>
           <div className="selected-note-strip">
-            {sharedNotes.length === 0 ? <span>No shared notes selected.</span> : sharedNotes.map((note) => <span key={note}>{note}</span>)}
+            {sharedNotes.length === 0 ? <span>还没有选择共享笔记。</span> : sharedNotes.map((note) => <span key={note}>{note}</span>)}
           </div>
         </section>
       </div>

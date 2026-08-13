@@ -90,8 +90,8 @@ struct TodayMemberState: Equatable, Identifiable {
 
         guard member.hasSynced, let sync = member.sync else {
             self.status = .waiting
-            self.statusText = "Waiting"
-            self.cardTitle = "No check-in yet"
+            self.statusText = "等待中"
+            self.cardTitle = "还没有同步"
             self.moodScore = nil
             self.energyScore = nil
             self.longingScore = nil
@@ -101,16 +101,16 @@ struct TodayMemberState: Equatable, Identifiable {
 
         if sync.visibility == .private {
             self.status = .syncedPrivate
-            self.statusText = "Synced privately"
-            self.cardTitle = "Private check-in"
+            self.statusText = "已私密同步"
+            self.cardTitle = "私密同步"
             self.moodScore = nil
             self.energyScore = nil
             self.longingScore = nil
             self.note = nil
         } else {
             self.status = .syncedVisible
-            self.statusText = "Synced"
-            self.cardTitle = sync.card?.title ?? "Shared check-in"
+            self.statusText = "已同步"
+            self.cardTitle = sync.card?.title ?? "共享同步"
             self.moodScore = sync.moodScore
             self.energyScore = sync.energyScore
             self.longingScore = sync.longingScore
@@ -140,13 +140,13 @@ struct TodayView: View {
                 }
                 .padding()
             }
-            .navigationTitle("Today")
+            .navigationTitle("今天")
         }
     }
 
     private var memberStatusSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Daily rhythm")
+            Text("今日节奏")
                 .font(.headline)
 
             ForEach(viewModel.state.memberStates) { member in
@@ -171,9 +171,9 @@ struct TodayView: View {
                        let energy = member.energyScore,
                        let longing = member.longingScore {
                         HStack(spacing: 12) {
-                            scorePill("Mood", mood)
-                            scorePill("Energy", energy)
-                            scorePill("Longing", longing)
+                            scorePill("心情", mood)
+                            scorePill("能量", energy)
+                            scorePill("想念", longing)
                         }
                     }
 
@@ -192,10 +192,10 @@ struct TodayView: View {
 
     private var syncFormSection: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("Your check-in")
+            Text("你的同步")
                 .font(.headline)
 
-            Picker("Card", selection: Binding(
+            Picker("心情卡", selection: Binding(
                 get: { viewModel.selectedCardId },
                 set: { viewModel.selectCard(id: $0) }
             )) {
@@ -205,9 +205,9 @@ struct TodayView: View {
             }
             .pickerStyle(.menu)
 
-            scoreSlider("Mood", value: $viewModel.moodScore)
-            scoreSlider("Energy", value: $viewModel.energyScore)
-            scoreSlider("Longing", value: $viewModel.longingScore)
+            scoreSlider("心情", value: $viewModel.moodScore)
+            scoreSlider("能量", value: $viewModel.energyScore)
+            scoreSlider("想念", value: $viewModel.longingScore)
 
             TextEditor(text: $viewModel.note)
                 .frame(minHeight: 92)
@@ -215,9 +215,9 @@ struct TodayView: View {
                     RoundedRectangle(cornerRadius: 8)
                         .stroke(.quaternary)
                 )
-                .accessibilityLabel("Note")
+                .accessibilityLabel("今天想说")
 
-            Picker("Visibility", selection: $viewModel.visibility) {
+            Picker("可见范围", selection: $viewModel.visibility) {
                 ForEach(DailySyncVisibility.allCases) { visibility in
                     Text(visibility.label).tag(visibility)
                 }
@@ -226,7 +226,7 @@ struct TodayView: View {
 
             Button {
             } label: {
-                Label("Save check-in", systemImage: "heart.fill")
+                Label("保存今日同步", systemImage: "heart.fill")
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)

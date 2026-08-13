@@ -303,7 +303,6 @@ small {
 .user-switch,
 .note-option {
   display: grid;
-  grid-template-columns: auto auto minmax(0, 1fr) auto;
   gap: 10px;
   align-items: center;
   min-height: 72px;
@@ -313,6 +312,38 @@ small {
   background: #fff;
   color: var(--ink);
   text-align: left;
+}
+
+.sync-card-button {
+  grid-template-columns: minmax(0, 1fr);
+  align-content: space-between;
+  min-height: 126px;
+}
+
+.sync-card-main,
+.sync-card-meta {
+  display: flex;
+  min-width: 0;
+}
+
+.sync-card-main {
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.sync-card-copy {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.sync-card-copy strong {
+  line-height: 1.24;
+  overflow-wrap: anywhere;
+}
+
+.sync-card-meta {
+  justify-content: flex-start;
 }
 
 .sync-card-button.is-selected,
@@ -336,12 +367,13 @@ small {
 
 .score-badges {
   display: flex;
+  flex-wrap: wrap;
   gap: 4px;
 }
 
 .score-badges b {
   display: grid;
-  min-width: 28px;
+  min-width: 52px;
   height: 24px;
   place-items: center;
   border-radius: 6px;
@@ -696,6 +728,16 @@ textarea {
 
   .two-column,
   .two-column.wide-left {
+    grid-template-columns: 1fr;
+  }
+
+  .sync-card-grid {
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+  }
+}
+
+@media (max-width: 980px) {
+  .sync-card-grid {
     grid-template-columns: 1fr;
   }
 }

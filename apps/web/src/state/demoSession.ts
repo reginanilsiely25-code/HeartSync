@@ -74,46 +74,46 @@ export function createInitialDemoState(): DemoState {
     serviceStatus: "local-demo",
     llmStatus: "mock-fallback",
     users: [
-      { id: "alice", deviceUserId: "alice-device", displayName: "Alice", avatarColor: "#d96f66", role: "me" },
-      { id: "bao", deviceUserId: "bao-device", displayName: "Bao", avatarColor: "#3f8f88", role: "partner" }
+      { id: "alice", deviceUserId: "alice-device", displayName: "小晴", avatarColor: "#d96f66", role: "me" },
+      { id: "bao", deviceUserId: "bao-device", displayName: "阿屿", avatarColor: "#3f8f88", role: "partner" }
     ],
     syncCards: [
       {
         id: "card-miss-you",
-        title: "Missing you loudly",
+        title: "很大声地想你",
         emoji: "💌",
         color: "#f2a6a0",
-        tags: ["longing", "soft"],
+        tags: ["想念", "柔软"],
         defaultMoodScore: 4,
         defaultEnergyScore: 3,
         defaultLongingScore: 5
       },
       {
         id: "card-low-battery",
-        title: "Low battery",
+        title: "电量有点低",
         emoji: "🪫",
         color: "#c2b8a6",
-        tags: ["tired", "quiet"],
+        tags: ["疲惫", "安静"],
         defaultMoodScore: 3,
         defaultEnergyScore: 2,
         defaultLongingScore: 4
       },
       {
         id: "card-need-hug",
-        title: "Need a hug",
+        title: "想要一个抱抱",
         emoji: "🤍",
         color: "#b7c7e8",
-        tags: ["care", "comfort"],
+        tags: ["被照顾", "安慰"],
         defaultMoodScore: 3,
         defaultEnergyScore: 3,
         defaultLongingScore: 5
       },
       {
         id: "card-glowing",
-        title: "Glowing today",
+        title: "今天亮晶晶",
         emoji: "✨",
         color: "#f1c65b",
-        tags: ["bright", "good-news"],
+        tags: ["开心", "好消息"],
         defaultMoodScore: 5,
         defaultEnergyScore: 4,
         defaultLongingScore: 2
@@ -128,7 +128,7 @@ export function createInitialDemoState(): DemoState {
         moodScore: 5,
         energyScore: 4,
         longingScore: 3,
-        note: "Finished the hard thing and saved a quiet evening for us.",
+        note: "今天把最难的事做完了，想把安静的晚上留给我们。",
         visibility: "partner_visible",
         updatedAt: "2026-08-13T09:10:00.000Z"
       },
@@ -140,7 +140,7 @@ export function createInitialDemoState(): DemoState {
         moodScore: 3,
         energyScore: 2,
         longingScore: 4,
-        note: "Private recharge note for later.",
+        note: "想先自己充一会儿电，晚点再慢慢说。",
         visibility: "private",
         updatedAt: "2026-08-13T09:30:00.000Z"
       },
@@ -152,7 +152,7 @@ export function createInitialDemoState(): DemoState {
         moodScore: 3,
         energyScore: 3,
         longingScore: 5,
-        note: "A short call helped more than I expected.",
+        note: "那通短电话比我想象中更有用。",
         visibility: "partner_visible",
         updatedAt: "2026-08-12T13:00:00.000Z"
       },
@@ -164,7 +164,7 @@ export function createInitialDemoState(): DemoState {
         moodScore: 4,
         energyScore: 3,
         longingScore: 5,
-        note: "Picked a weekend place; want your vote.",
+        note: "我挑了一个周末地点，想让你投票。",
         visibility: "partner_visible",
         updatedAt: "2026-08-12T13:10:00.000Z"
       }
@@ -172,39 +172,39 @@ export function createInitialDemoState(): DemoState {
     plans: [
       {
         id: "plan-river",
-        title: "Saturday river walk",
+        title: "周六江边散步",
         type: "date",
         scheduledAt: "2026-08-15T17:00",
         ownerDeviceUserId: "alice-device",
-        startPlaceText: "Shanghai Library",
-        destinationText: "West Bund",
+        startPlaceText: "上海图书馆",
+        destinationText: "西岸",
         startLatitude: 31.2072,
         startLongitude: 121.444,
         destinationLatitude: 31.185,
         destinationLongitude: 121.4648,
-        notes: "Bring tea and pick a bench before sunset.",
+        notes: "带一杯茶，日落前找一张长椅。",
         status: "in_progress"
       },
       {
         id: "plan-call",
-        title: "Anniversary photo call",
+        title: "纪念日照片电话",
         type: "anniversary",
         scheduledAt: "2026-08-18T20:30",
         ownerDeviceUserId: "bao-device",
-        startPlaceText: "Home",
-        destinationText: "Video room",
-        notes: "No coordinates needed for this one.",
+        startPlaceText: "家",
+        destinationText: "视频房间",
+        notes: "这个约定不需要路线坐标。",
         status: "not_started"
       },
       {
         id: "plan-done",
-        title: "Book September tickets",
+        title: "订九月车票",
         type: "joint_task",
         scheduledAt: "2026-08-10T19:00",
         ownerDeviceUserId: "alice-device",
-        startPlaceText: "Alice desk",
-        destinationText: "Train app",
-        notes: "Booked the outbound train.",
+        startPlaceText: "小晴的书桌",
+        destinationText: "购票 App",
+        notes: "去程车票已经订好。",
         status: "completed",
         completedAt: "2026-08-10T19:35:00.000Z"
       }
