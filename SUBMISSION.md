@@ -2,6 +2,8 @@
 
 GitHub repository: https://github.com/reginanilsiely25-code/HeartSync
 
+Online WebUI: https://reginanilsiely25-code.github.io/HeartSync/
+
 ## Materials Checklist
 
 | Requirement | Submitted material |
@@ -14,7 +16,7 @@ GitHub repository: https://github.com/reginanilsiely25-code/HeartSync
 | CI configuration with unit-test job | `.gitlab-ci.yml` with `unit-test`; `.github/workflows/ci.yml` also runs verification on GitHub |
 | CI/CD execution record | GitHub Actions history in the repository Actions tab; local final verification checklist in `docs/final-verification-checklist.md` |
 | REFLECTION.md | `REFLECTION.md` |
-| WebUI entry | Local review URL after running `npm run dev:web`: `http://localhost:5173` |
+| WebUI entry | Online: `https://reginanilsiely25-code.github.io/HeartSync/`; local after running `npm run dev:web`: `http://localhost:5173` |
 
 ## Quick Verification
 
